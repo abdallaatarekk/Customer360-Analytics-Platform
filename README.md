@@ -258,7 +258,4 @@ During this project I gained practical experience with:
 Data Analyst
 
 LinkedIn:
-(Add your LinkedIn)
-
-GitHub:
-(Add your GitHub)
+(https://www.linkedin.com/in/abdallaatarekk/)
