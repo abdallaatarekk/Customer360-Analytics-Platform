@@ -250,7 +250,30 @@ During this project I gained practical experience with:
 - End-to-End Analytics Workflow
 
 ---
+# Dataset
 
+This project uses the **Customer 360 Synthetic Dataset** from Kaggle.
+
+Dataset:
+https://www.kaggle.com/datasets/vinaykandimalla/customer-360
+
+The dataset contains:
+
+- CRM Customers
+- Orders
+- Product Catalog
+- Support Tickets
+- Clickstream Events
+
+The data is intentionally dirty and was designed for:
+
+- Data Cleaning
+- ETL Pipelines
+- Customer 360 Analytics
+- Databricks
+- Data Engineering
+- Business Intelligence 
+---
 # Author
 
 **Abdallah Tarek**
