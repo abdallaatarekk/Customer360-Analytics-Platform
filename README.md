@@ -185,44 +185,35 @@ Dimension Tables
 
 ---
 
-# Screenshots
+## Dashboard Preview
 
-## Executive Overview
+### Executive Overview
 
-![Executive Overview](screenshots/executive-overview.png)
-
----
-
-## Customer360 Analytics
-
-![Customer360](screenshots/customer360-dashboard.png)
+![Executive Overview](screenshots/executive-overview.jpeg)
 
 ---
 
-## Support Analytics
+### Customer360 Analytics
 
-![Support Analytics](screenshots/support-analytics.png)
-
----
-
-## Star Schema
-
-![Star Schema](screenshots/star-schema.png)
+![Customer360 Analytics](screenshots/customer360-dashboard.jpeg)
 
 ---
 
-## Medallion Architecture
+### Support Analytics
 
-![Architecture](screenshots/medallion-architecture.png)
-
----
-
-## Databricks Workspace
-
-![Workspace](screenshots/databricks-workspace.png)
+![Support Analytics](screenshots/support-analytics.jpeg)
 
 ---
 
+### Star Schema
+
+![Star Schema](screenshots/star-schema.jpeg)
+
+---
+
+### Databricks Workspace
+
+![Databricks Workspace](screenshots/databricks-workspace.jpeg)
 # Repository Structure
 
 ```text
