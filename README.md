@@ -1,7 +1,7 @@
 # Customer360 Analytics Platform
 
 ![Power BI](https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black)
-![Databricks](https://img.shields.io/badge/Databricks-ETL-EF3E42?logo=databricks&logoColor=white)
+![Databricks](https://img.shields.io/badge/Databricks-ELT-EF3E42?logo=databricks&logoColor=white)
 ![PySpark](https://img.shields.io/badge/PySpark-Data%20Engineering-E25A1C?logo=apachespark&logoColor=white)
 ![SQL](https://img.shields.io/badge/SQL-Analytics-336791?logo=postgresql&logoColor=white)
 ![Status](https://img.shields.io/badge/Project-Completed-success)
