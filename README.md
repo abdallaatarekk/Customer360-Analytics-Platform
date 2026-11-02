@@ -1,129 +1,151 @@
-# Customer360 Analytics Platform
+# Customer360 Analytics & Automation Platform
 
 ![Power BI](https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black)
-![Databricks](https://img.shields.io/badge/Databricks-ELT-EF3E42?logo=databricks&logoColor=white)
-![PySpark](https://img.shields.io/badge/PySpark-Data%20Engineering-E25A1C?logo=apachespark&logoColor=white)
+![Databricks](https://img.shields.io/badge/Databricks-Data%20Engineering-EF3E42?logo=databricks&logoColor=white)
+![PySpark](https://img.shields.io/badge/PySpark-ETL-E25A1C?logo=apachespark&logoColor=white)
 ![SQL](https://img.shields.io/badge/SQL-Analytics-336791?logo=postgresql&logoColor=white)
+![n8n](https://img.shields.io/badge/n8n-Workflow%20Automation-EA4B71?logo=n8n&logoColor=white)
 ![Status](https://img.shields.io/badge/Project-Completed-success)
 
----
+An end-to-end Customer 360 analytics platform built with **Databricks, PySpark, SQL, Power BI, and n8n**.
 
-# Customer360 Analytics Platform
+The project transforms fragmented and inconsistent business data into reliable analytical models, interactive dashboards, and automated data quality monitoring workflows.
 
-An End-to-End Data Analytics project that transforms raw business data into executive insights using the Medallion Architecture (Bronze → Silver → Gold) with Databricks and Power BI.
-
----
-
-# Business Problem
-
-Modern businesses generate data from multiple sources including:
-
-- Customers
-- Orders
-- Products
-- Support Tickets
-- Website Clickstream
-
-Raw data is often inconsistent, duplicated, incomplete, and difficult to analyze.
-
-The objective of this project is to build a complete analytics pipeline capable of transforming raw operational data into reliable business intelligence dashboards.
+It follows the **Medallion Architecture (Bronze → Silver → Gold)** and connects data engineering, business intelligence, and workflow automation into one analytical solution.
 
 ---
 
-# Solution
+## Project Overview
 
-The project follows a modern Lakehouse architecture.
+Modern businesses generate data across multiple operational systems, including:
 
-Raw Data
+- Customer relationship management (CRM)
+- Orders and transactions
+- Product catalogs
+- Customer support tickets
+- Website clickstream events
 
-↓
+When these sources are disconnected and contain duplicates, missing values, and inconsistent records, producing reliable business reports becomes difficult.
 
-Bronze Layer
+**The objective:** Build a centralized Customer 360 analytics platform that integrates these sources, improves data reliability, automates quality monitoring, and provides actionable business insights.
 
-↓
+## Architecture
 
-Silver Layer
+The solution follows a Medallion Lakehouse approach:
 
-↓
+```text
+       Raw Business Data
+               |
+               v
+        Bronze Layer
+      Raw Data Ingestion
+               |
+               v
+        Silver Layer
+   Cleaning & Standardization
+               |
+               v
+          Gold Layer
+   Business-Ready Data Models
+               |
+        +------+------+
+        |             |
+        v             v
+   Power BI       n8n Workflow
+   Dashboards     Data Quality Checks
+        |             |
+        v             v
+   Business      Google Sheets
+    Insights     Audit Logging
+```
 
-Gold Layer
+## Data Engineering & Medallion Architecture
 
-↓
+### 1. Bronze Layer
 
-Power BI Dashboards
+Responsible for ingesting and preserving the original source data.
 
----
+- Raw data ingestion.
+- Original data preservation.
+- Source-level data organization.
+- No business transformations.
 
-# Architecture
+### 2. Silver Layer
 
-## Bronze Layer
+Responsible for improving data quality and preparing datasets for analysis.
 
-- Raw Data Ingestion
-- No Business Logic
-- Original Data Preservation
+- Data cleaning and standardization.
+- Duplicate detection and removal.
+- Missing value handling.
+- Data type corrections.
+- Business validation rules.
+- Data quality checks.
 
----
+### 3. Gold Layer
 
-## Silver Layer
+Contains business-ready analytical datasets designed for reporting and analysis.
 
-- Data Cleaning
-- Data Standardization
-- Duplicate Removal
-- Null Handling
-- Business Validation
-- Data Quality Rules
+- 3 Fact Tables.
+- 4 Dimension Tables.
+- Date Dimension.
+- Star Schema data modeling.
+- Analytics-ready tables for Power BI.
 
----
+## Data Quality & Automation
 
-## Gold Layer
+An automated data quality monitoring workflow was implemented using **n8n** to monitor the Gold layer.
 
-Business-ready analytical tables.
+### Workflow Capabilities
 
-Includes:
+- Automated checks across 7 Gold tables.
+- Monitoring of 884K+ records.
+- Detection and classification of data quality issues.
+- Automated logging of detected issues.
+- Google Sheets integration for audit tracking and monitoring.
 
-- Fact Tables
-- Dimension Tables
-- Date Dimension
-- Star Schema
+This workflow helps make data quality issues more visible and provides a structured way to track validation results.
 
----
+### Data Quality Findings
 
-# Technology Stack
+The project identified several data quality issues, including:
 
-- Databricks
-- PySpark
-- SQL
-- Power BI
-- DAX
-- Star Schema
-- Medallion Architecture
-- GitHub
+| Finding | Records |
+|---|---:|
+| Duplicate Customer IDs | 1,734 |
+| Missing Email Addresses | 1,040 |
+| Orders Flagged with Customer-Related Data Issues | 11,163 |
 
----
+These findings helped highlight inconsistencies that could affect customer analytics and business reporting.
 
-# Dashboards
+## Power BI Dashboards
 
-## 1. Executive Overview
+Three interactive dashboards were developed to provide different perspectives on business performance.
 
-Provides a high-level business summary including:
+### 1. Executive Overview
+
+Provides a high-level overview of business performance.
+
+**Key metrics and analysis:**
 
 - Revenue
 - Orders
 - Customers
 - Products Sold
 - Website Events
-- Revenue Trend
-- Order Trend
+- Revenue Trends
+- Order Trends
 - Revenue by Category
 - Customer Growth
 
+![Executive Overview](screenshots/executive-overview.jpeg)
+
 ---
 
-## 2. Customer360 Analytics
+### 2. Customer360 Analytics
 
-Focused on customer behavior.
+Focuses on customer behavior, purchasing patterns, and engagement.
 
-KPIs include:
+**Key metrics and analysis:**
 
 - Average Customer Spend
 - Average Orders per Customer
@@ -132,132 +154,130 @@ KPIs include:
 - Website Activity
 - Product Categories
 
+![Customer360 Analytics](screenshots/customer360-dashboard.jpeg)
+
 ---
 
-## 3. Support Analytics
+### 3. Support Analytics
 
-Customer support performance dashboard.
+Evaluates customer support operations and service performance.
 
-Includes:
+**Key metrics and analysis:**
 
 - Resolution Rate
 - Average Resolution Time
 - Ticket Volume
-- Support Agents
+- Support Agent Performance
 - Customer Sentiment
 - Issue Types
 
----
-
-# Business KPIs
-
-- Revenue
-- Orders
-- Customers
-- Products Sold
-- Website Events
-- Customer Growth
-- Average Customer Spend
-- Average Orders
-- Resolution Rate
-- Average Resolution Time
-- Customer Sentiment
-- Support Performance
+![Support Analytics](screenshots/support-analytics.jpeg)
 
 ---
 
-# Data Model
+## Data Model
 
-Star Schema
+The analytical model follows a **Star Schema** consisting of three fact tables and four dimensions.
 
-Fact Tables
+### Fact Tables
 
 - Fact Orders
 - Fact Clickstream
 - Fact Support Tickets
 
-Dimension Tables
+### Dimension Tables
 
 - Dim Customer
 - Dim Product
 - Dim Support Agent
 - Dim Date
 
----
-
-## Dashboard Preview
-
-### Executive Overview
-
-![Executive Overview](screenshots/executive-overview.jpeg)
-
----
-
-### Customer360 Analytics
-
-![Customer360 Analytics](screenshots/customer360-dashboard.jpeg)
-
----
-
-### Support Analytics
-
-![Support Analytics](screenshots/support-analytics.jpeg)
-
----
-
-### Star Schema
-
 ![Star Schema](screenshots/star-schema.jpeg)
 
 ---
 
-### Databricks Workspace
+## Power BI Performance & Refresh
+
+Beyond dashboard development, the project also includes Power BI refresh and performance configuration.
+
+- Configured an Incremental Refresh policy to support refreshing recent data instead of reprocessing the entire historical dataset.
+- Used Power BI Performance Analyzer to inspect DAX query execution and visual rendering performance.
+- Reviewed report performance to identify opportunities for optimization.
+
+---
+
+## Databricks Workspace
+
+The data engineering and transformation workflow was developed using Databricks and PySpark.
 
 ![Databricks Workspace](screenshots/databricks-workspace.jpeg)
-# Repository Structure
+
+## n8n Automation Workflow
+
+The n8n workflow connects automated data quality checks with Google Sheets for issue classification and audit logging.
+
+![n8n Data Quality Workflow](screenshots/n8n-workflow.jpeg)
+
+---
+
+## Technology Stack
+
+| Technology | Purpose |
+|---|---|
+| Databricks | Data processing environment |
+| PySpark | Data transformation and cleaning |
+| SQL | Data querying and validation |
+| Power BI | Business intelligence and reporting |
+| DAX | Measures and KPI calculations |
+| Power Query | Data preparation |
+| n8n | Workflow automation and quality monitoring |
+| Google Sheets | Data quality audit logging |
+| Star Schema | Analytical data modeling |
+| Medallion Architecture | Data pipeline organization |
+
+## Business Recommendations
+
+Based on the analytical findings, the project produced four business recommendations supported by a 90-day action plan.
+
+These recommendations focus on improving data reliability, strengthening customer reporting, monitoring customer and support performance, and addressing identified data quality issues.
+
+## Future Improvements
+
+Potential extensions of the platform include:
+
+- CI/CD deployment for data workflows.
+- More advanced automated data quality testing.
+- Streaming data integration.
+- Additional analytical use cases and predictive models.
+
+## Repository Structure
 
 ```text
-Customer360-Analytics-Platform
+Customer360-Analytics-Platform/
 │
-├── screenshots
-├── documentation
+├── screenshots/
+│   ├── executive-overview.jpeg
+│   ├── customer360-dashboard.jpeg
+│   ├── support-analytics.jpeg
+│   ├── star-schema.jpeg
+│   ├── databricks-workspace.jpeg
+│   └── n8n-workflow.jpeg
+│
+├── documentation/
+│
 ├── README.md
 ├── LICENSE
 └── .gitignore
 ```
 
-# Future Improvements
-
-- Incremental Loading
-- Delta Live Tables
-- CI/CD Deployment
-- Automated Data Quality Tests
-- Streaming Pipeline
-
----
-
-# Lessons Learned
-
-During this project I gained practical experience with:
-
-- Building modern Data Pipelines
-- Medallion Architecture
-- Data Cleaning
-- Business Validation
-- Star Schema Design
-- KPI Development
-- Dashboard Storytelling
-- End-to-End Analytics Workflow
-
----
-# Dataset
+## Dataset
 
 This project uses the **Customer 360 Synthetic Dataset** from Kaggle.
 
-Dataset:
+**Source:**  
 https://www.kaggle.com/datasets/vinaykandimalla/customer-360
 
-The dataset contains:
+The dataset includes:
 
 - CRM Customers
 - Orders
@@ -265,20 +285,32 @@ The dataset contains:
 - Support Tickets
 - Clickstream Events
 
-The data is intentionally dirty and was designed for:
+The intentionally inconsistent data provided an opportunity to practice data cleaning, ETL development, data quality validation, and Customer 360 analytics.
 
-- Data Cleaning
-- ETL Pipelines
-- Customer 360 Analytics
-- Databricks
-- Data Engineering
-- Business Intelligence 
+## Key Learning Outcomes
+
+Through this project, I gained practical experience in:
+
+- Building end-to-end data pipelines.
+- Implementing Medallion Architecture.
+- Data transformation using PySpark and SQL.
+- Designing Star Schema data models.
+- Implementing data validation and quality monitoring.
+- Automating workflows using n8n.
+- Developing business-focused Power BI dashboards.
+- Configuring Incremental Refresh.
+- Evaluating report performance using Performance Analyzer.
+- Translating analytical findings into business recommendations.
+
+## Author
+
+**Abdallah Tarek**  
+Data Analyst | BI Developer
+
+- **LinkedIn:** https://www.linkedin.com/in/abdallaatarekk/
+- **GitHub:** https://github.com/abdallaatarekk
+- **Portfolio:** https://abdallahportfolio-phi-ten.vercel.app/
+
 ---
-# Author
 
-**Abdallah Tarek**
-
-Data Analyst
-
-LinkedIn:
-(https://www.linkedin.com/in/abdallaatarekk/)
+*Thanks for exploring this project. Feedback and professional connections are always welcome.*
