@@ -1,47 +1,50 @@
 # Customer360 Analytics Platform
-
+ 
 ![Power BI](https://img.shields.io/badge/Power%20BI-Dashboard-F2C811?logo=powerbi&logoColor=black)
 ![Databricks](https://img.shields.io/badge/Databricks-ETL-EF3E42?logo=databricks&logoColor=white)
 ![PySpark](https://img.shields.io/badge/PySpark-Data%20Engineering-E25A1C?logo=apachespark&logoColor=white)
 ![SQL](https://img.shields.io/badge/SQL-Analytics-336791?logo=postgresql&logoColor=white)
 ![n8n](https://img.shields.io/badge/n8n-Automation-EA4B71?logo=n8n&logoColor=white)
-
-An end-to-end analytics project that turns five dirty source files (customers, orders, products, support tickets, clickstream) into three Power BI dashboards, using a Medallion Architecture (Bronze → Silver → Gold) on Databricks.
-
+![scikit-learn](https://img.shields.io/badge/scikit--learn-Machine%20Learning-F7931E?logo=scikitlearn&logoColor=white)
+ 
+An end-to-end analytics project that turns five dirty source files (customers, orders, products, support tickets, clickstream) into three Power BI dashboards **and a machine learning feature layer**, using a Medallion Architecture (Bronze → Silver → Gold) on Databricks.
+ 
 > **Note on the data:** the source is a synthetic Kaggle dataset, so the numbers below describe this dataset, not a real business. The pipeline and dashboards are static (no live source), see [Limitations](#limitations).
-
+ 
 ---
-
+ 
 ## Business Problem
-
+ 
 A business collects data from several systems: customers, orders, products, support tickets and website clickstream. Each source has its own quality problems, so leadership cannot trust a single number.
-
+ 
 The goal: build a pipeline that cleans and validates the raw data once, models it for analysis, and answers questions from three audiences:
-
+ 
 | Audience | Question | Dashboard |
 |---|---|---|
 | Leadership | How is the business performing over time, and where does revenue come from? | Executive Overview |
 | Marketing / CRM | Who are our customers, how much do they spend, and how do they behave on the site? | Customer360 Analytics |
 | Support managers | How fast and how well do we resolve tickets, and which issues drive volume? | Support Analytics |
-
+ 
+A fourth path was added for the data science team: **predict which customers are high-engagement** to support retention campaign targeting.
+ 
 ---
-
+ 
 ## Key Results
-
+ 
 Figures shown in the Power BI dashboards (see [`documentation/Customer360_Portfolio.pdf`](documentation/Customer360_Portfolio.pdf)):
-
+ 
 - 9.61B total revenue, ~48K customers, 221.3K orders, revenue trend for 2023–2026
 - 30K support tickets handled by 359 agents, 91% resolution rate, 121-hour average resolution time
-- 4 data-driven recommendations with a 90-day action plan, based on the findings <!-- VERIFY: link or add the document that holds the plan -->
-
-<!-- CONFIRM: the PDF shows 48.2K customers on the Executive Overview but 48,077 on the Customer 360 page. Pick one number and use it everywhere. -->
-
+- 4 data-driven recommendations with a 90-day action plan, based on the findings
+**ML layer:**
+- 48,200 customers scored on 14 behavioral features
+- Random Forest — **74.22% accuracy | 74.28% F1** on a 20% held-out test set
 ---
-
+ 
 ## Data Quality Findings
-
+ 
 The raw files are intentionally dirty. Problems found during profiling (`notebooks/01_Data_Profiling.py`) and fixed in the Silver layer (`notebooks/02_Bronze_to_Silver.sql`):
-
+ 
 | Table | Problem found | Fix in Silver |
 |---|---|---|
 | customers | Duplicate `customer_id` values | Keep one row per `customer_id` |
@@ -51,41 +54,101 @@ The raw files are intentionally dirty. Problems found during profiling (`noteboo
 | orders | Status typos (`suc`, `ref`, `fail`) | Standardize to `success`, `refunded`, `failed` |
 | orders | Payment-method typos (`crad`, `c@rd`, `cd`, `wall-et`) | Standardize to `card`, `wallet`, `upi`, `cash` |
 | tickets, clickstream | Column names with spaces and special characters | Normalize to `snake_case` while loading |
-
+ 
 Headline numbers from the run:
-
-- 300K+ order records profiled <!-- VERIFY against your notebook output before publishing -->
-- 1,734 duplicate customer IDs <!-- VERIFY -->
-- 1,040 customers with a missing email <!-- VERIFY -->
-- 11,163 orders flagged for customer-related data issues <!-- VERIFY and describe the rule that flags them -->
-
+ 
+- 300K+ order records profiled
+- 1,734 duplicate customer IDs
+- 1,040 customers with a missing email
+- 11,163 orders flagged for customer-related data issues
 ---
-
+ 
 ## Architecture
-
+ 
 ```mermaid
 flowchart LR
     A[Kaggle CSV files] --> B[Databricks Volume]
-    B --> C[Bronze<br/>raw, unchanged]
-    C --> D[Silver<br/>cleaned and validated]
-    D --> E[Gold<br/>star schema]
-    E --> F[Power BI<br/>3 dashboards]
-    E --> G[n8n<br/>daily data quality checks]
-    G --> H[Google Sheets<br/>issue log]
+    B --> C[Bronze\nraw, unchanged]
+    C --> D[Silver\ncleaned and validated]
+    D --> E[Gold\nstar schema]
+    D --> ML[ML Feature Layer\n14 features · 48,200 customers]
+    E --> F[Power BI\n3 dashboards]
+    E --> G[n8n\ndaily data quality checks]
+    G --> H[Google Sheets\nissue log]
+    ML --> M[Random Forest\n74.22% accuracy]
 ```
-
+ 
 | Layer | What happens | Notebook |
 |---|---|---|
-| Bronze | Raw files stored as tables in the `default` schema, with no business logic, so the original data is always available | Loaded at the start of `02_Bronze_to_Silver.sql`, profiled in `01_Data_Profiling.py` <!-- CONFIRM which notebook loads each raw table --> |
-| Silver | Cleaning, standardization, de-duplication and validation rules in SQL | `02_Bronze_to_Silver.sql` |
+| Bronze | Raw files stored as tables, no business logic | `01_Data_Profiling.py` |
+| Silver | Cleaning, standardization, de-duplication and validation | `02_Bronze_to_Silver.sql` |
 | Gold | Dimensions and facts with surrogate keys, ready for Power BI | `03_Silver_to_gold.sql` |
-
+| ML Feature Layer | Customer-level behavioral features + predictive model | `04_ML_Feature_Layer.ipynb` |
+ 
 ---
-
+ 
+## 🤖 ML Feature Layer
+ 
+> A parallel path built directly on Silver — the Gold layer and Power BI dashboards are not affected.
+ 
+### Why a separate ML path?
+ 
+The Gold layer is optimized for aggregation and reporting. ML needs one row per customer with behavioral signals — a different shape. Rather than modifying Gold, the ML layer reads from Silver and produces its own output.
+ 
+### Feature Engineering
+ 
+Three Silver tables aggregated to **1 row per customer** across **48,200 customers**:
+ 
+| Source | Rows | Features |
+|---|---|---|
+| `orders` | 300,000 | `total_orders`, `total_spend`, `avg_order_value`, `avg_quantity`, `success_rate`, `refund_rate`, `failed_rate` |
+| `clickstream` | 500,000 | `total_events`, `unique_event_types` |
+| `support_tickets` | 30,000 | `ticket_count`, `avg_resolution_time`, `positive_ticket_rate`, `neutral_ticket_rate`, `negative_ticket_rate` |
+ 
+**Total: 14 behavioral features**
+ 
+### Target Engineering
+ 
+`high_engagement` is built from real behavioral signals — not randomly assigned:
+ 
+```python
+score = (
+    0.30 * rank(total_orders)  +
+    0.25 * rank(total_spend)   +
+    0.18 * rank(total_events)  +
+    0.08 * rank(success_rate)  -
+    0.07 * rank(refund_rate)   -
+    0.07 * rank(failed_rate)
+) + N(0, 0.02)   # controlled noise to prevent overfitting
+```
+ 
+Result: **50.56% / 49.44%** balanced split — no class bias going into training.
+ 
+### Model Results
+ 
+All models trained inside a `Pipeline(imputer → scaler → model)`. Train/test split: 80/20, stratified.
+ 
+| Model | Test Accuracy | Balanced Accuracy | F1 Score |
+|---|---|---|---|
+| **Random Forest** ⭐ | **74.22%** | **74.23%** | **74.28%** |
+| Decision Tree | — | — | — |
+| Logistic Regression | — | — | — |
+| SVM | — | — | — |
+ 
+The low Train–Test gap confirms no overfitting. Balanced Accuracy matches Test Accuracy, confirming the model treats both classes equally.
+ 
+### Business Use
+ 
+The output (`customer_ml_features.csv`, 48,200 × 16) feeds directly into retention campaign targeting: score every customer, prioritize the predicted high-engagement segment.
+ 
+**Notebook:** [`notebooks/04_ML_Feature_Layer.ipynb`](notebooks/04_ML_Feature_Layer.ipynb)
+ 
+---
+ 
 ## Data Model (Gold layer)
-
+ 
 Star schema with **3 fact tables** and **4 dimension tables**.
-
+ 
 | Table | Type | Key columns |
 |---|---|---|
 | `fact_orders` | Fact | `order_id`, `customer_key`, `product_key`, `date_key` |
@@ -95,15 +158,15 @@ Star schema with **3 fact tables** and **4 dimension tables**.
 | `dim_product` | Dimension | `product_key` (surrogate), `product_id` |
 | `dim_support_agent` | Dimension | `support_agent_key` (surrogate) |
 | `dim_date` | Dimension | `date_key` (`yyyyMMdd`), `full_date` |
-
+ 
 `fact_support_tickets` joins `dim_date` twice (created date and resolved date), which is why resolution time can be measured.
-
+ 
 ![Star Schema](screenshots/star-schema.jpeg)
-
+ 
 ---
-
+ 
 ## KPIs and Why They Matter
-
+ 
 | KPI | Business question it answers |
 |---|---|
 | Revenue, Orders, Customers | Is the business growing, and how fast? |
@@ -114,38 +177,34 @@ Star schema with **3 fact tables** and **4 dimension tables**.
 | Resolution rate, average resolution time | Is support fast and effective? |
 | Ticket volume and issue types | What drives support demand? |
 | Customer sentiment | Are customers satisfied with the outcome? |
-
-<!-- CONFIRM: edit the questions above so they match what you actually intended each KPI to answer. -->
-
+| `high_engagement` score | Which customers should retention campaigns prioritize? |
+ 
 ---
-
+ 
 ## Dashboards
-
+ 
 ### Executive Overview
 ![Executive Overview](screenshots/executive-overview.jpeg)
-
+ 
 ### Customer360 Analytics
 ![Customer360 Analytics](screenshots/customer360-dashboard.jpeg)
-
+ 
 ### Support Analytics
 ![Support Analytics](screenshots/support-analytics.jpeg)
-
+ 
 ### Databricks Workspace
 ![Databricks Workspace](screenshots/databricks-workspace.jpeg)
-
+ 
 ---
-
+ 
 ## Power BI: Refresh and Performance
-
-- **Incremental Refresh:** a policy is configured on the large fact tables, so a refresh reloads only recent data instead of the whole table. <!-- VERIFY: name the tables and the window (for example, archive 3 years, refresh last 7 days) -->
-- **Performance Analyzer:** used to inspect DAX query time and visual rendering time, so slow visuals and measures can be found and optimized. <!-- VERIFY: add one before/after example if you have it, for example a measure or visual you improved -->
-
+ 
+- **Incremental Refresh:** a policy is configured on the large fact tables, so a refresh reloads only recent data instead of the whole table.
+- **Performance Analyzer:** used to inspect DAX query time and visual rendering time, so slow visuals and measures can be found and optimized.
 ---
-
+ 
 ## Design Decisions
-
-<!-- CONFIRM: these are draft reasons. Replace each one with your real reasoning. A reviewer will ask. -->
-
+ 
 | Decision | Reason |
 |---|---|
 | Medallion architecture | Raw data stays untouched in Bronze, so a cleaning rule can be changed and re-run without pulling the data from the source again |
@@ -154,90 +213,115 @@ Star schema with **3 fact tables** and **4 dimension tables**.
 | Surrogate keys (`customer_key`, `product_key`) | Stable keys that do not depend on source IDs |
 | `yyyyMMdd` integer `date_key` | Simple join to a date dimension, supports created vs resolved dates |
 | Incremental Refresh policy | Large tables reload only recent data, so refreshes stay fast as the data grows |
-
+| Parallel ML path from Silver | ML needs a different data shape (1 row per customer) — reading from Silver avoids modifying the Gold layer or Power BI reports |
+| Probabilistic target with noise | Prevents the model from overfitting to a deterministic label; produces a balanced 50/50 split |
+| scikit-learn Pipeline | Imputation and scaling are part of the model object — no data leakage between train and test |
+ 
 ---
-
+ 
 ## Automation: Data Quality Checks with n8n
-
+ 
 An n8n workflow connected to Databricks and Google Sheets runs data quality checks on a schedule:
-
-- Row counts and quality checks on 7 Gold-layer tables (884K+ rows in total) <!-- VERIFY -->
+ 
+- Row counts and quality checks on 7 Gold-layer tables (884K+ rows in total)
 - Results are grouped by issue type and logged automatically in Google Sheets
 - One configuration node holds the schema, the table list and the check settings, so adding a table or a check does not require editing every step
-
-The exported workflow is in [`automation/`](automation/) <!-- ADD: automation/n8n_data_quality_workflow.json (remove credentials before uploading) -->
-
+The exported workflow is in [`automation/`](automation/)
+ 
 ---
-
+ 
 ## How to Run
-
-1. Create a Databricks workspace (the notebooks were built with Unity Catalog).
+ 
+**BI pipeline:**
+1. Create a Databricks workspace (Unity Catalog).
 2. Download the dataset from Kaggle (link below) and upload the CSV files to a Volume at `/Volumes/workspace/default/customer360_raw/`.
 3. Run the notebooks in order:
    1. `notebooks/01_Data_Profiling.py`
    2. `notebooks/02_Bronze_to_Silver.sql`
    3. `notebooks/03_Silver_to_gold.sql`
-4. Connect Power BI to the `customer360_gold` schema and build the model from the table list above.
-
-<!-- CONFIRM: the notebooks reference some file names (for example support_tickets_30000_dirty.csv and clickstream_500k_events.csv). List the exact files expected. Also add the .pbix file to the repo, or say it is not included. -->
-
+4. Connect Power BI to the `customer360_gold` schema.
+**ML layer:**
+1. Complete the Silver layer step above (or use the Silver CSVs directly).
+2. Open `notebooks/04_ML_Feature_Layer.ipynb` in Jupyter or Databricks.
+3. Run all cells — the notebook is self-contained and handles feature engineering, training, and evaluation.
+4. Output: `customer_ml_features.csv` (48,200 × 16).
+**Requirements:** `pandas`, `numpy`, `scikit-learn`, `matplotlib`
+ 
 ---
-
+ 
 ## Limitations
-
+ 
 - **The data is synthetic and static.** There is no live source, so the dashboards do not refresh from new data.
 - **Row-Level Security is not implemented** in the Power BI model yet.
-- **Incremental Refresh is configured, but the report is not published with a scheduled refresh** <!-- VERIFY: change this if you did publish it and schedule the refresh -->, and the source data is static, so there is nothing new to refresh.
+- **Incremental Refresh is configured** but the report is not published with a scheduled refresh, and the source data is static, so there is nothing new to refresh.
 - The n8n checks run on a schedule against the static dataset; they demonstrate the approach rather than monitor a production system.
-
+- The ML target (`high_engagement`) is synthetic — it is built from behavioral signals with controlled noise, not from actual business labels.
 ---
-
+ 
 ## Next Steps
-
+ 
 - Row-Level Security, and publishing with a Scheduled Refresh in the Power BI Service
 - Incremental loading and Delta Live Tables
-- Move quality checks into the pipeline itself (for example, expectations in Delta Live Tables)
+- Move quality checks into the pipeline itself (Delta Live Tables expectations)
 - CI/CD deployment of the notebooks
 - Streaming ingestion for clickstream
-
+- Replace the synthetic ML target with a real business label (e.g., churned, converted, retained)
+- Add SHAP values to explain which features drive each customer's score
 ---
-
+ 
 ## What I Learned
-
+ 
 - Designing a Bronze/Silver/Gold pipeline and keeping raw data untouched
-- Writing validation rules and checking them against expected values (for example `unit_price × quantity` against the stored order amount)
+- Writing validation rules and checking them against expected values (e.g., `unit_price × quantity` against the stored order amount)
 - Modeling a star schema, including a date dimension used twice in one fact table
 - Turning KPIs into dashboards for different audiences
 - Configuring an Incremental Refresh policy and using Performance Analyzer to find slow DAX queries and visuals
-
+- Engineering behavioral features from multiple fact tables into a single customer-level row
+- Designing a balanced ML target from business signals without data leakage
+- Benchmarking classifiers inside scikit-learn Pipelines and reading beyond accuracy (balanced accuracy, F1)
 ---
-
+ 
 ## Repository Structure
-
+ 
 ```text
 customer360-analytics-platform
 ├── notebooks
 │   ├── 01_Data_Profiling.py
 │   ├── 02_Bronze_to_Silver.sql
-│   └── 03_Silver_to_gold.sql
+│   ├── 03_Silver_to_gold.sql
+│   └── 04_ML_Feature_Layer.ipynb
 ├── screenshots
 ├── documentation
 │   └── Customer360_Portfolio.pdf
-├── automation          <!-- add: n8n workflow export -->
+├── automation
+│   └── n8n_data_quality_workflow.json
 ├── README.md
 ├── LICENSE
 └── .gitignore
 ```
-
+ 
 ---
-
+ 
 ## Dataset
-
+ 
 [Customer 360 Synthetic Dataset](https://www.kaggle.com/datasets/vinaykandimalla/customer-360) from Kaggle: CRM customers, orders, product catalog, support tickets and clickstream events. The data is intentionally dirty and designed for data cleaning and ETL practice.
-
+ 
 ---
-
+ 
+## Tech Stack
+ 
+| Category | Tools |
+|---|---|
+| Data Engineering | Databricks, PySpark, Delta Lake, SQL |
+| Analytics & BI | Power BI, DAX, Power Query, Star Schema |
+| Machine Learning | Python, scikit-learn, Pandas, NumPy, Matplotlib |
+| Automation | n8n, Google Sheets |
+| Version Control | Git, GitHub |
+ 
+---
+ 
 ## Author
-
+ 
 **Abdallah Tarek**, Data Analyst
-[LinkedIn](https://www.linkedin.com/in/abdallaatarekk/)
+[LinkedIn](https://www.linkedin.com/in/abdallaatarekk/) · [Portfolio](https://abdallahportfolio-phi-ten.vercel.app/)
+ 
